@@ -10,40 +10,57 @@ Status](https://badge.buildkite.com/26d895f5525652e57915a607d0ecd3fc945c8280a0bd
 Table of Contents
 =================
 
-   * [rules_jvm_external](#rules_jvm_external)
-      * [Features](#features)
-      * [Usage](#usage)
-      * [API Reference](#api-reference)
-      * [Pinning artifacts and integration with Bazel's downloader](#pinning-artifacts-and-integration-with-bazels-downloader)
-         * [Updating maven_install.json](#updating-maven_installjson)
-         * [Custom location for maven_install.json](#custom-location-for-maven_installjson)
-         * [Multiple maven_install.json files](#multiple-maven_installjson-files)
-      * [Generated targets](#generated-targets)
-      * [Outdated artifacts](#outdated-artifacts)
-      * [Advanced usage](#advanced-usage)
-         * [Fetch source JARs](#fetch-source-jars)
-         * [Checksum verification](#checksum-verification)
-         * [artifact helper macro](#artifact-helper-macro)
-         * [java_plugin_artifact helper macro](#java_plugin_artifact-helper-macro)
-         * [Multiple maven_install declarations for isolated artifact version trees](#multiple-maven_install-declarations-for-isolated-artifact-version-trees)
-         * [Detailed dependency information specifications](#detailed-dependency-information-specifications)
-         * [Artifact exclusion](#artifact-exclusion)
-         * [Compile-only dependencies](#compile-only-dependencies)
-         * [Resolving user-specified and transitive dependency version conflicts](#resolving-user-specified-and-transitive-dependency-version-conflicts)
-         * [Overriding generated targets](#overriding-generated-targets)
-         * [Proxies](#proxies)
-         * [Repository aliases](#repository-aliases)
-            * [Repository remapping](#repository-remapping)
-         * [Hiding transitive dependencies](#hiding-transitive-dependencies)
-         * [Fetch and resolve timeout](#fetch-and-resolve-timeout)
-         * [Duplicate artifact warning](#duplicate-artifact-warning)
-         * [Resolving issues with nonstandard system default JDKs](#resolving-issues-with-nonstandard-system-default-jdks)
-      * [Exporting and consuming artifacts from external repositories](#exporting-and-consuming-artifacts-from-external-repositories)
-      * [Publishing to external repositories](#publishing-to-external-repositories)
-      * [Configuring the dependency resolver](#configuring-the-dependency-resolver)
-      * [Demo](#demo)
-      * [Projects using rules_jvm_external](#projects-using-rules_jvm_external)
-      * [Generating documentation](#generating-documentation)
+- [rules\_jvm\_external](#rules_jvm_external)
+- [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Prerequisites](#prerequisites)
+  - [Usage](#usage)
+  - [API Reference](#api-reference)
+  - [Pinning artifacts and integration with Bazel's downloader](#pinning-artifacts-and-integration-with-bazels-downloader)
+    - [Updating `maven_install.json`](#updating-maven_installjson)
+    - [Requiring lock file repinning when the list of artifacts changes](#requiring-lock-file-repinning-when-the-list-of-artifacts-changes)
+    - [Custom location for `maven_install.json`](#custom-location-for-maven_installjson)
+    - [Multiple `maven_install.json` files](#multiple-maven_installjson-files)
+    - [(Experimental) Support for Maven BOM files](#experimental-support-for-maven-bom-files)
+  - [Generated targets](#generated-targets)
+  - [Outdated artifacts](#outdated-artifacts)
+  - [Advanced usage](#advanced-usage)
+    - [Fetch source JARs](#fetch-source-jars)
+    - [Checksum verification](#checksum-verification)
+    - [Using a custom Coursier download url](#using-a-custom-coursier-download-url)
+    - [`artifact` helper macro](#artifact-helper-macro)
+    - [`java_plugin_artifact` helper macro](#java_plugin_artifact-helper-macro)
+    - [Multiple `maven_install` declarations for isolated artifact version trees](#multiple-maven_install-declarations-for-isolated-artifact-version-trees)
+    - [Detailed dependency information specifications](#detailed-dependency-information-specifications)
+    - [Artifact exclusion](#artifact-exclusion)
+    - [Compile-only dependencies](#compile-only-dependencies)
+    - [Test-only dependencies](#test-only-dependencies)
+    - [Resolving user-specified and transitive dependency version conflicts](#resolving-user-specified-and-transitive-dependency-version-conflicts)
+    - [Overriding generated targets](#overriding-generated-targets)
+    - [Proxies](#proxies)
+    - [Repository aliases](#repository-aliases)
+      - [Repository remapping](#repository-remapping)
+    - [Hiding transitive dependencies](#hiding-transitive-dependencies)
+    - [Accessing transitive dependencies list](#accessing-transitive-dependencies-list)
+    - [Fetch and resolve timeout](#fetch-and-resolve-timeout)
+    - [Ignoring empty jars](#ignoring-empty-jars)
+    - [Duplicate artifact warning](#duplicate-artifact-warning)
+    - [Provide JVM options for Coursier with `COURSIER_OPTS`](#provide-jvm-options-for-coursier-with-coursier_opts)
+    - [Resolving issues with nonstandard system default JDKs](#resolving-issues-with-nonstandard-system-default-jdks)
+  - [Exporting and consuming artifacts from external repositories](#exporting-and-consuming-artifacts-from-external-repositories)
+  - [Publishing to External Repositories](#publishing-to-external-repositories)
+  - [Configuring the dependency resolver](#configuring-the-dependency-resolver)
+    - [Common options](#common-options)
+    - [Configuring Coursier](#configuring-coursier)
+    - [Configuring Maven](#configuring-maven)
+  - [IPv6 support](#ipv6-support)
+  - [Demo](#demo)
+  - [Projects using rules\_jvm\_external](#projects-using-rules_jvm_external)
+  - [Developing this project](#developing-this-project)
+    - [Verbose / debug mode](#verbose--debug-mode)
+    - [Tests](#tests)
+      - [Installing the Android SDK on macOS](#installing-the-android-sdk-on-macos)
+    - [Generating documentation](#generating-documentation)
 
 ## Features
 
@@ -319,8 +336,8 @@ maven.install(
         "org.seleniumhq.selenium:selenium-java",
     ],
     # The `maven` resolver requires a lock file, though this can be an empty file before pinning
-    lock_file = "@//:manifest_install.json",
-)    
+    lock_file = "//:manifest_install.json",
+)
 ```
 
 ## Generated targets
@@ -817,9 +834,9 @@ target relative to your main workspace, instead of the `@maven` workspace.
 The dependency that has been overridden is made available prefixed with
 `original_`. That is, in the example above, the version of Guava that was
 resolved could be accessed as `@maven//:original_com_google_guava_guava`.
-The primary use case this is designed to support is to allow specific 
-targets to have additional dependencies added (eg. to ensure a default 
-implementation of key interfaces are available on the classpath without 
+The primary use case this is designed to support is to allow specific
+targets to have additional dependencies added (eg. to ensure a default
+implementation of key interfaces are available on the classpath without
 needing to modify every target)
 
 ### Proxies

@@ -1370,7 +1370,8 @@ pinned_coursier_fetch = repository_rule(
             doc = "Instructions to re-pin the repository if required. Many people have wrapper scripts for keeping dependencies up to date, and would like to point users to that instead of the default.",
         ),
         "excluded_artifacts": attr.string_list(default = []),  # only used for hash generation
-        "_workspace_label": attr.label(default = Label("@//does/not:exist")),
+        # Use @@// to refer to the main repo with Bzlmod.
+        "_workspace_label": attr.label(default = ("@@" if str(Label("//:invalid")).startswith("@@") else "@") + "//does/not:exist"),
     },
     implementation = _pinned_coursier_fetch_impl,
 )
