@@ -1,3 +1,5 @@
+load("@rules_java//java:defs.bzl", "JavaInfo")
+
 def generate_javadoc(ctx, javadoc, source_jars, classpath, javadocopts, output):
     args = ctx.actions.args()
     args.add_all(["--out", output])
