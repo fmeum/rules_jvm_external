@@ -1,3 +1,4 @@
+load("@rules_java//java:defs.bzl", "JavaInfo")
 load(":has_maven_deps.bzl", "MavenInfo", "calculate_artifact_jars", "calculate_artifact_source_jars", "has_maven_deps")
 
 def _combine_jars(ctx, merge_jars, inputs, excludes, output):
