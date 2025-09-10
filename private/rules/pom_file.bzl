@@ -1,3 +1,4 @@
+load("@rules_java//java:defs.bzl", "JavaInfo")
 load(":has_maven_deps.bzl", "MavenInfo", "has_maven_deps")
 load(":maven_utils.bzl", "generate_pom")
 
