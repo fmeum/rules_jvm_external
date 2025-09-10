@@ -31,6 +31,7 @@ _BUILD = """
 
 load("@rules_jvm_external//private/rules:jvm_import.bzl", "jvm_import")
 load("@rules_jvm_external//private/rules:jetifier.bzl", "jetify_aar_import", "jetify_jvm_import")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 {aar_import_statement}
 
 {imports}
